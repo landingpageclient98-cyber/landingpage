@@ -515,19 +515,26 @@
 
     /* ── Send event to CAPI serverless function ── */
     function sendCAPI(eventName, eventID) {
+      var payload = JSON.stringify({
+        eventName:  eventName,
+        eventID:    eventID,
+        fbp:        getCookie('_fbp'),
+        fbc:        getFbc(),
+        sourceUrl:  window.location.href,
+        userAgent:  navigator.userAgent
+      });
       try {
-        fetch('/.netlify/functions/capi', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventName:  eventName,
-            eventID:    eventID,
-            fbp:        getCookie('_fbp'),   // Meta pixel cookie — user identity
-            fbc:        getFbc(),            // Meta click ID — cookie or URL fbclid
-            sourceUrl:  window.location.href,
-            userAgent:  navigator.userAgent
-          })
-        }).catch(function(){}); // silent fail — never break the page
+        // sendBeacon survives page navigation / tab switches (important for button clicks)
+        if (navigator.sendBeacon) {
+          var blob = new Blob([payload], { type: 'application/json' });
+          navigator.sendBeacon('/.netlify/functions/capi', blob);
+        } else {
+          fetch('/.netlify/functions/capi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload
+          }).catch(function(){});
+        }
       } catch(e){}
     }
 
