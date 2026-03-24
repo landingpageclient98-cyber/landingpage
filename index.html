@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;900&family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 
-  <!-- META PIXEL — replace YOUR_PIXEL_ID -->
+  <!-- META PIXEL -->
   <script>
     !function(f,b,e,v,n,t,s){
       if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -24,10 +24,11 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)
     }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init','811327548651768');
+    fbq('init','2006588536412201');
+    fbq('track','PageView');
   </script>
   <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=811327548651768&ev=PageView&noscript=1"/></noscript>
+    src="https://www.facebook.com/tr?id=2006588536412201&ev=PageView&noscript=1"/></noscript>
 
   <style>
     /* ─── RESET ─── */
@@ -488,76 +489,17 @@
   </div>
 
   <script>
-    /* ── UUID generator for Meta Pixel CAPI deduplication ── */
-    function generateEventID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
-        var r=Math.random()*16|0, v=c==='x'?r:(r&0x3|0x8);
-        return v.toString(16);
-      });
-    }
-
-    /* ── Cookie reader (for fbp / fbc — Facebook identity cookies) ── */
-    function getCookie(name) {
-      var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-      return m ? m[2] : undefined;
-    }
-
-    /* ── fbc helper: cookie first, then construct from URL fbclid ── */
-    function getFbc() {
-      var cookie = getCookie('_fbc');
-      if (cookie) return cookie;
-      try {
-        var fbclid = new URLSearchParams(window.location.search).get('fbclid');
-        if (fbclid) return 'fb.1.' + Date.now() + '.' + fbclid;
-      } catch(e) {}
-      return undefined;
-    }
-
-    /* ── Send event to CAPI serverless function ── */
-    function sendCAPI(eventName, eventID) {
-      var payload = JSON.stringify({
-        eventName:  eventName,
-        eventID:    eventID,
-        fbp:        getCookie('_fbp'),
-        fbc:        getFbc(),
-        sourceUrl:  window.location.href,
-        userAgent:  navigator.userAgent
-      });
-      try {
-        // sendBeacon survives page navigation / tab switches (important for button clicks)
-        if (navigator.sendBeacon) {
-          var blob = new Blob([payload], { type: 'application/json' });
-          navigator.sendBeacon('/.netlify/functions/capi', blob);
-        } else {
-          fetch('/.netlify/functions/capi', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload
-          }).catch(function(){});
-        }
-      } catch(e){}
-    }
-
-    /* ── Meta Pixel events (browser) + CAPI (server) ── */
-    window.addEventListener('load', function(){
-      var id = generateEventID();
-      try { sessionStorage.setItem('pv_event_id', id); } catch(e){}
-      // Browser pixel
-      if(typeof fbq !== 'undefined') fbq('track','PageView',{},{eventID:id});
-      // Server-side CAPI (same eventID = Meta deduplicates, counts as 1)
-      sendCAPI('PageView', id);
-    });
-
+    /* ── Meta Pixel: Track Subscribe on Telegram button click ── */
     var tgBtn = document.getElementById('telegram-btn');
     if(tgBtn){
-      tgBtn.addEventListener('click', function(e){
-        var id = generateEventID();
-        try { sessionStorage.setItem('lead_event_id', id); } catch(e){}
-        // Browser pixel
+      tgBtn.addEventListener('click', function(){
         if(typeof fbq !== 'undefined')
-          fbq('track','Subscribe',{content_name:'Telegram Join',content_category:'IPL Prediction',currency:'INR',value:0},{eventID:id});
-        // Server-side CAPI
-        sendCAPI('Subscribe', id);
+          fbq('track','Subscribe',{
+            content_name: 'Telegram Join',
+            content_category: 'IPL Prediction',
+            currency: 'INR',
+            value: 0
+          });
       });
     }
 
